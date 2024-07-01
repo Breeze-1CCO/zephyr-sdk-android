@@ -1,32 +1,21 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+  repositories {
+    google()
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath("com.android.tools.build:gradle:8.5.0")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:2.0.0")
+  }
+}
+
+
 plugins {
-  id("com.android.library")
-  id("kotlin-android")
-}
-
-android {
-  namespace = "in.breeze.zephyr"
-  compileSdk = 34
-
-  defaultConfig {
-    minSdk = 24
-  }
-
-  buildTypes {
-    release {
-      isMinifyEnabled = false
-      proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-    }
-  }
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-  }
-  kotlinOptions {
-    jvmTarget = "1.8"
-  }
-}
-
-dependencies {
-  implementation(libs.androidx.core.ktx)
-  implementation(libs.androidx.appcompat)
+  alias(libs.plugins.android.application) apply false
+  alias(libs.plugins.jetbrains.kotlin.android) apply false
+  alias(libs.plugins.compose.compiler) apply false
+  alias(libs.plugins.android.library) apply false
 }
