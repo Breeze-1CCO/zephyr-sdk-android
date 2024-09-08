@@ -1,4 +1,4 @@
-package `in`.breeze.zephyr
+package `in`.breeze.blaze
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -13,7 +13,7 @@ import org.json.JSONObject
 
 typealias CallbackFn = (event: JSONObject) -> Unit;
 
-class Zephyr {
+class Blaze {
 
   private lateinit var initiatePayload: JSONObject;
   private lateinit var webView: WebView;
@@ -30,7 +30,7 @@ class Zephyr {
       this.callbackFn = callbackFn;
       this.webView = WebView(context);
       this.webView.settings.javaScriptEnabled = true;
-      this.webView.addJavascriptInterface(this, "Zephyr");
+      this.webView.addJavascriptInterface(this, "Blaze");
       this.webView.loadUrl(this.getAppUrl());
       this.isInitialized = true;
     } catch (e: JSONException) {

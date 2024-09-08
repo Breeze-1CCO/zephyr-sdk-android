@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-  namespace = "in.breeze.zephyrapp"
+  namespace = "in.breeze.blazeapp"
   compileSdk = 34
 
   defaultConfig {
-    applicationId = "in.breeze.zephyrapp"
+    applicationId = "in.breeze.blazeapp"
     minSdk = 24
     targetSdk = 34
     versionCode = 1
@@ -57,7 +57,7 @@ dependencies {
   implementation(libs.androidx.ui.graphics)
   implementation(libs.androidx.ui.tooling.preview)
   implementation(libs.androidx.material3)
-  implementation(project(":zephyr"))
+  implementation(project(":blaze"))
   testImplementation(libs.junit)
   androidTestImplementation(libs.androidx.junit)
   androidTestImplementation(libs.androidx.espresso.core)

@@ -1,37 +1,32 @@
-package `in`.breeze.zephyrapp
+package `in`.breeze.blazeapp
 
 import android.os.Bundle
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import `in`.breeze.zephyr.Zephyr
-import `in`.breeze.zephyrapp.ui.theme.ZephyrAppTheme
+import `in`.breeze.blaze.Blaze
+import `in`.breeze.blazeapp.ui.theme.BlazeAppTheme
 import org.json.JSONObject
 import java.util.UUID.randomUUID
 
 class MainActivity : ComponentActivity() {
 
-  private lateinit var zephyr: Zephyr
+  private lateinit var blaze: Blaze
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -39,7 +34,7 @@ class MainActivity : ComponentActivity() {
 
     val activityContext = this
     setContent {
-      ZephyrAppTheme {
+      BlazeAppTheme {
         Column(
           modifier = Modifier
             .fillMaxWidth()
@@ -50,12 +45,12 @@ class MainActivity : ComponentActivity() {
         ) {
           InitiateView {
             Toast.makeText(activityContext, "Initiate Triggered", Toast.LENGTH_SHORT).show()
-            zephyr = Zephyr()
+            blaze = Blaze()
 
             val initiatePayload = createInitiatePayload()
             val initSDKPayload = createSDKPayload(initiatePayload)
 
-            zephyr.initiate(activityContext, initSDKPayload) { callbackEvent ->
+            blaze.initiate(activityContext, initSDKPayload) { callbackEvent ->
               run {
                 println("callbackEvent: " + callbackEvent.toString(2))
               }
@@ -65,7 +60,7 @@ class MainActivity : ComponentActivity() {
           Spacer(modifier = Modifier.height(16.dp))
           ProcessView {
             Toast.makeText(activityContext, "Process Triggered", Toast.LENGTH_SHORT).show()
-            zephyr.process()
+            blaze.process()
           }
         }
       }

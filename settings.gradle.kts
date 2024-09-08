@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "ZephyrApp"
+rootProject.name = "Blaze SDK"
 include(":app")
-include(":zephyr")
+include(":blaze")

@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-  namespace = "in.breeze.zephyr"
+  namespace = "in.breeze.blaze"
   compileSdk = 34
 
   defaultConfig {
@@ -41,9 +41,9 @@ afterEvaluate {
     publications {
       create<MavenPublication>("maven") {
         groupId = "in.breeze"
-        artifactId = "zephyr"
+        artifactId = "blaze"
         version = "0.0.1-alpha"
-        artifact(layout.buildDirectory.file("outputs/aar/zephyr-release.aar"))
+        artifact(layout.buildDirectory.file("outputs/aar/blaze-release.aar"))
       }
     }
   }

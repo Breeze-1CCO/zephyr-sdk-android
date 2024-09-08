@@ -1,4 +1,4 @@
-package `in`.breeze.zephyrapp
+package `in`.breeze.blazeapp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
   fun useAppContext() {
     // Context of the app under test.
     val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    assertEquals("in.breeze.zephyrapp", appContext.packageName)
+    assertEquals("in.breeze.blazeapp", appContext.packageName)
   }
 }
