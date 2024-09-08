@@ -1,4 +1,4 @@
-package `in`.breeze.zephyrapp.ui.theme
+package `in`.breeze.blazeapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,12 +1,12 @@
-# Zephyr SDK Android
+# Blaze SDK Android
 
-The Zephyr SDK is an easy-to-use toolkit that allows you to effortlessly integrate and utilize [Breeze 1 Click Checkout](https://breeze.in) & its services into your android app.
+The Blaze SDK is an easy-to-use toolkit that allows you to effortlessly integrate and utilize [Breeze 1 Click Checkout](https://breeze.in) & its services into your android app.
 
 ## Android SDK Integration
 
-Follow the below steps to integrate Zephyr SDK into your android application:
+Follow the below steps to integrate Blaze SDK into your android application:
 
-### Step 1: Obtaining the Zephyr SDK
+### Step 1: Obtaining the Blaze SDK
 
 1.1. Include the repository for SDK Resolution to your project's `settings.gradle.kts` or `settings.gradle` file.
 
@@ -16,7 +16,7 @@ dependencyResolutionManagement {
  repositories {
    google()
    mavenCentral()
-   // jitpack repository for Zephyr SDK resolution
+   // jitpack repository for Blaze SDK resolution
    maven {
     url = uri("https://jitpack.io")
   }
@@ -29,20 +29,20 @@ dependencyResolutionManagement {
 ```kotlin
 dependencies {
  // ... rest of your app dependencies
- // Add Zephyr SDK as a dependency
- implementation 'com.github.juspay:zephyr-sdk-android:0.0.1-alpha
+ // Add Blaze SDK as a dependency
+ implementation 'com.github.juspay:blaze-sdk-android:0.0.1-alpha
 }
 ```
 
 ### Step 2: Initialize the SDK
 
-**2.1. Create an instance of the `Zephyr` class in your application class.**
+**2.1. Create an instance of the `Blaze` class in your application class.**
 
 ```kotlin
-val zephyr = Zephyr()
+val blaze = Blaze()
 ```
 
-**2.2. Initiate the Zephyr instance. Preferably in the `onCreate` method of your application class.**
+**2.2. Initiate the Blaze instance. Preferably in the `onCreate` method of your application class.**
 
 In order to call initiate you need to perform the following steps:
 
@@ -77,7 +77,7 @@ You need to implement this method in order to handle the result of the SDK opera
 
 ```kotlin
 
-fun zephyrCallbackHandler (event: JSONObject) {
+fun blazeCallbackHandler (event: JSONObject) {
   val eventName = event.getString("eventName")
   val eventData = event.getJSONObject("eventData")
 
@@ -88,13 +88,13 @@ fun zephyrCallbackHandler (event: JSONObject) {
 
 ```
 
-***2.2.3: Call the initiate method on Zephyr Instance **
+#### 2.2.3: Call the initiate method on Blaze Instance
 
-Finally, call the initiate method on the Zephyr instance with the payload and the callback method.
+Finally, call the initiate method on the Blaze instance with the payload and the callback method.
 The first parameter is the context of the application.
 
 ```kotlin
-zephyr.initiate(this, initSDKPayload, ::zephyrCallbackHandler)
+blaze.initiate(this, initSDKPayload, ::blazeCallbackHandler)
 ```
 
 ***Combined Example:***
@@ -102,8 +102,8 @@ zephyr.initiate(this, initSDKPayload, ::zephyrCallbackHandler)
 ```kotlin
 class MyApplication : Application() {
 
-    // Create Zephyr Instance
-    val zephyr = Zephyr()
+    // Create Blaze Instance
+    val blaze = Blaze()
 
     override fun onCreate() {
       super.onCreate()
@@ -122,13 +122,13 @@ class MyApplication : Application() {
       initSDKPayload.put("service", "in.breeze.onecco")
       initSDKPayload.put("payload", initiatePayload)
 
-      // 2.2.3 Initiate Zephyr SDK
-      zephyr.initiate(this, initSDKPayload, ::zephyrCallbackHandler)
+      // 2.2.3 Initiate Blaze SDK
+      blaze.initiate(this, initSDKPayload, ::blazeCallbackHandler)
     }
 }
 
 // 2.2.2: Creating a Callback handler
-fun zephyrCallbackHandler (event: JSONObject) {
+fun blazeCallbackHandler (event: JSONObject) {
   val eventName = event.getString("eventName")
   val eventData = event.getJSONObject("eventData")
 
@@ -166,23 +166,23 @@ processSDKPayload.put("payload", processPayload)
 
 ```
 
-#### 3.2: Call the process method on Zephyr Instance
+#### 3.2: Call the process method on Blaze Instance
 
-Call the process method on the Zephyr instance with the process payload to start the user journey or a headless flow.
+Call the process method on the Blaze instance with the process payload to start the user journey or a headless flow.
 
 ```kotlin
-zephyr.process(processSDKPayload)
+blaze.process(processSDKPayload)
 ```
 
 ### Step 4: Handling Back Press
 
-For making the hardware back button work as expected, you need to call the `handleBackPress` method on the Zephyr instance.
+For making the hardware back button work as expected, you need to call the `handleBackPress` method on the Blaze instance.
 The method should be called in the `onBackPressed` method of the activity.
 This method returns a boolean value which indicates if you need to handle back press or not.
 
 ```kotlin
 override fun onBackPressed() {
-  if (!zephyr.handleBackPress()) {
+  if (!blaze.handleBackPress()) {
     super.onBackPressed()
   }
 }
@@ -194,7 +194,7 @@ This section contains optional steps required to be implemented only if you are 
 
 ***onActivityResult***
 
-In order to handle results of App Switches in cases like UPI Intent transactions, you need to call super.onActivityResult() if available, if not you can make same function call on Zephyr Instance.
+In order to handle results of App Switches in cases like UPI Intent transactions, you need to call super.onActivityResult() if available, if not you can make same function call on Blaze Instance.
 
 ```kotlin
 override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -202,13 +202,13 @@ override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) 
   super.onActivityResult(requestCode, resultCode, data)
 
   // In case super.onActivityResult is NOT available please use following:
-  zephyr.onActivityResult(requestCode, resultCode, data)
+  blaze.onActivityResult(requestCode, resultCode, data)
 }
 ```
 
 ***onRequestPermissionsResult***
 
-In order to handle results of Permission Request results for cases like OTP Reading, you need to call super.onRequestPermissionsResult() in your onRequestPermissionsResult lifeCycle hook, if available, if not you can make same function call on Zephyr Instance.
+In order to handle results of Permission Request results for cases like OTP Reading, you need to call super.onRequestPermissionsResult() in your onRequestPermissionsResult lifeCycle hook, if available, if not you can make same function call on Blaze Instance.
 
 ```kotlin
 override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -216,6 +216,6 @@ override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out
   super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
   // In case super.onActivityResult is NOT available please use following:
-  zephyr.onRequestPermissionsResult(requestCode, permissions, grantResults)
+  blaze.onRequestPermissionsResult(requestCode, permissions, grantResults)
 }
 ```

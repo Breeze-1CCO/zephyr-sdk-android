@@ -1,4 +1,4 @@
-package `in`.breeze.zephyrapp
+package `in`.breeze.blazeapp
 
 import org.junit.Test
 
