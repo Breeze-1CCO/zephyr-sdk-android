@@ -30,7 +30,7 @@ dependencyResolutionManagement {
 dependencies {
  // ... rest of your app dependencies
  // Add Blaze SDK as a dependency
- implementation 'com.github.juspay:blaze-sdk-android:0.0.1-alpha
+ implementation 'com.github.juspay:blaze-sdk-android:0.0.2-alpha'
 }
 ```
 
