@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
           Spacer(modifier = Modifier.height(16.dp))
           ProcessView {
             Toast.makeText(activityContext, "Process Triggered", Toast.LENGTH_SHORT).show()
-            blaze.process()
+            blaze.process(JSONObject())
           }
         }
       }
