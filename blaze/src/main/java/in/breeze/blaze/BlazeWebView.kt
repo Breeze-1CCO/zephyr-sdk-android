@@ -35,12 +35,6 @@ internal class BlazeWebView @SuppressLint(
 
   fun process(payload: JSONObject) {
     this.sendEvent("process", payload)
-    this.webView.layoutParams = FrameLayout.LayoutParams(
-      ViewGroup.LayoutParams.MATCH_PARENT,
-      ViewGroup.LayoutParams.MATCH_PARENT
-    )
-    val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
-    rootView?.addView(webView)
   }
 
   fun handleBackPress(): Boolean {
@@ -78,7 +72,15 @@ internal class BlazeWebView @SuppressLint(
     if (eventMessage == "releaseBackPress") {
       consumingBackPress = false
     }
-    
+
+    if (eventMessage == "renderView") {
+      renderView()
+    }
+
+    if (eventMessage == "hideView") {
+      hideView()
+    }
+
   }
 
 
@@ -104,6 +106,25 @@ internal class BlazeWebView @SuppressLint(
     eventQueue.clear()
     pendingEvents.forEach { (event, payload) ->
       sendEvent(event, payload)
+    }
+  }
+
+  private fun renderView() {
+    this.context.runOnUiThread {
+      this.webView.layoutParams = FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        ViewGroup.LayoutParams.MATCH_PARENT
+      )
+      val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
+      rootView?.addView(webView)
+    }
+  }
+
+  private fun hideView() {
+    this.context.runOnUiThread {
+      this.webView.layoutParams = FrameLayout.LayoutParams(0, 0)
+      val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
+      rootView?.removeView(webView)
     }
   }
 

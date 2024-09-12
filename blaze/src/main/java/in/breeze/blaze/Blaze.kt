@@ -3,6 +3,7 @@ package `in`.breeze.blaze
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import androidx.annotation.Keep
 import org.json.JSONObject
 
@@ -19,7 +20,9 @@ class Blaze {
   fun initiate(context: Activity, initiatePayload: JSONObject, callbackFn: CallbackFn) {
       this.context = context;
       this.callbackFn = callbackFn;
-      this.webView = BlazeWebView(this.context, initiatePayload, callbackFn)
+      context.runOnUiThread {
+        this.webView = BlazeWebView(this.context, initiatePayload, callbackFn)
+      }
       this.isInitialized = true;
   }
 
