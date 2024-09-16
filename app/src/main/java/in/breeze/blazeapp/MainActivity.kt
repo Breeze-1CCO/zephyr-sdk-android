@@ -3,6 +3,7 @@ package `in`.breeze.blazeapp
 import android.os.Bundle
 import android.os.Handler.Callback
 import android.webkit.WebView
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,10 +19,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -43,6 +48,10 @@ class MainActivity : ComponentActivity() {
 
       val callbackEventsStr = remember { mutableStateOf("Event \n") }
 
+      val otpSessionToken = remember {
+        mutableStateOf("")
+      }
+
       BlazeAppTheme {
         Column(
           modifier = Modifier
@@ -62,14 +71,28 @@ class MainActivity : ComponentActivity() {
               run {
                 callbackEventsStr.value =
                   callbackEventsStr.value + callbackEvent.toString(2) + "\n ------- \n"
+
+                val callbackEventAction = callbackEvent.optJSONObject("payload")?.optString("action")
+
+                if(callbackEventAction == "sendOTP") {
+                  otpSessionToken.value = callbackEvent.optJSONObject("payload")?.optString("otpSessionToken") ?: ""
+                }
+
               }
             }
           }
           Spacer(modifier = Modifier.height(16.dp))
           ProcessView {
             Toast.makeText(activityContext, "Process Triggered", Toast.LENGTH_SHORT).show()
-            blaze.process(createSDKPayload(createProcessPayload()))
+            blaze.process(createSDKPayload(createStartCheckoutPayload()))
           }
+
+          LoginProcessParams(
+            processor = { payload ->
+              blaze.process(payload)
+            },
+            otpSessionToken = otpSessionToken
+          )
 
           Column(
             modifier = Modifier
@@ -77,8 +100,7 @@ class MainActivity : ComponentActivity() {
               .verticalScroll(rememberScrollState())
           ) {
             Text(
-              text = callbackEventsStr.value,
-              modifier = Modifier.padding(16.dp)
+              text = callbackEventsStr.value, modifier = Modifier.padding(16.dp)
             )
           }
 
@@ -105,7 +127,7 @@ fun createInitiatePayload(): JSONObject {
   return initiatePayload
 }
 
-fun createProcessPayload(): JSONObject {
+fun createStartCheckoutPayload(): JSONObject {
   val cartString = """
     {
       "token": "c1-473243a885065ad7c911dc334255d73e",
@@ -180,6 +202,22 @@ fun createProcessPayload(): JSONObject {
   return processPayload
 }
 
+fun createSendOtpPayload(phoneNumber: String): JSONObject {
+  val payload = JSONObject()
+  payload.put("action", "sendOTP")
+  payload.put("phoneNumber", phoneNumber)
+  payload.put("countryCode", "+91")
+  return payload;
+}
+
+fun createVerifyOtpPayload(otp: String, otpSessionToken: String): JSONObject {
+  val payload = JSONObject()
+  payload.put("action", "verifyOTP")
+  payload.put("otp", otp)
+  payload.put("otpSessionToken", otpSessionToken)
+  return payload
+}
+
 
 @Composable
 fun InitiateView(onClick: () -> Unit) {
@@ -200,3 +238,37 @@ fun ProcessView(onClick: () -> Unit) {
   }
 }
 
+
+@Composable
+fun LoginProcessParams(processor: (payload: JSONObject) -> Unit, otpSessionToken: MutableState<String>) {
+  var phoneNumber by remember {
+    mutableStateOf("")
+  }
+
+  var otp by remember {
+    mutableStateOf("")
+  }
+
+  Column(
+    modifier = Modifier.padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
+  ) {
+    OutlinedTextField(value = phoneNumber,
+      onValueChange = { phoneNumber = it },
+      label = { Text("Phone Number") })
+    OutlinedTextField(value = otp, onValueChange = { otp = it }, label = { Text("OTP") })
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      Button(onClick = {
+        processor(createSDKPayload(createSendOtpPayload(phoneNumber)))
+      }, enabled = phoneNumber.isNotEmpty()) {
+        Text(text = "SendOTP")
+      }
+      Button(onClick = {
+        processor(createSDKPayload(createVerifyOtpPayload(otp, otpSessionToken.value)))
+      }, enabled = otp.isNotEmpty()) {
+        Text(text = "VerifyOTP")
+      }
+    }
+  }
+}
