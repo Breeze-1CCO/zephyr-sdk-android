@@ -54,30 +54,30 @@ internal class BlazeWebView @SuppressLint(
   @JavascriptInterface
   fun onEvent(event: String) {
     val eventJson = safeParseJson(event)
-    val eventMessage = eventJson.getString("eventName")
+    val eventName = eventJson.getString("eventName")
     val eventData = eventJson.optString("eventData")
     val eventDataJson = safeParseJson(eventData)
-    if (eventMessage == "appReady") {
+    if (eventName == "appReady") {
       isWebViewReady = true
       drainEventQueue()
     }
-    if (eventMessage == "callbackEvent") {
+    if (eventName == "callbackEvent") {
       this.callbackFn.invoke(eventDataJson)
     }
 
-    if (eventMessage == "consumeBackPress") {
+    if (eventName == "consumeBackPress") {
       consumingBackPress = true
     }
 
-    if (eventMessage == "releaseBackPress") {
+    if (eventName == "releaseBackPress") {
       consumingBackPress = false
     }
 
-    if (eventMessage == "renderView") {
+    if (eventName == "renderView") {
       renderView()
     }
 
-    if (eventMessage == "hideView") {
+    if (eventName == "hideView") {
       hideView()
     }
 
@@ -85,8 +85,6 @@ internal class BlazeWebView @SuppressLint(
 
 
   private fun sendEvent(event: String, payload: JSONObject) {
-    Log.d("BlazeWebView", "Sending event: $event")
-    Log.d("BlazeWebView", "Payload: $payload")
     val eventMessage =
       JSONObject()
         .put("eventName", event)
