@@ -42,7 +42,7 @@ afterEvaluate {
       create<MavenPublication>("maven") {
         groupId = "in.breeze"
         artifactId = "blaze"
-        version = "0.0.1-alpha"
+        version = "0.0.8-alpha"
         artifact(layout.buildDirectory.file("outputs/aar/blaze-release.aar"))
       }
     }
