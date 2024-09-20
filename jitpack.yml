@@ -1,12 +1,2 @@
 jdk:
   - openjdk17
-
-env:
-  kotlin_version: '1.8.0'
-
-install:
-  - ./gradlew build -Pkotlin_version=$kotlin_version
-
-build:
-  - ./gradlew :blaze:build
-  - ./gradlew :blaze:assembleRelease
