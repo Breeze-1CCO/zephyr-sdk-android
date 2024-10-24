@@ -2,6 +2,10 @@ package `in`.breeze.blaze
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
+import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
@@ -23,6 +27,7 @@ internal class BlazeWebView @SuppressLint(
   private var isWebViewReady: Boolean = false
   private var consumingBackPress: Boolean = false
   private var eventQueue: HashMap<String, JSONObject> = hashMapOf()
+  private val sharedPreferences: SharedPreferences
 
   init {
     this.webView.settings.javaScriptEnabled = true
@@ -30,6 +35,7 @@ internal class BlazeWebView @SuppressLint(
     this.webView.addJavascriptInterface(this, "Native")
     this.webView.loadUrl(getBaseUrl(initiatePayload))
     this.sendEvent("initiate", this.initiatePayload)
+    this.sharedPreferences = context.getSharedPreferences("BlazeSharedPref", Context.MODE_PRIVATE)
   }
 
 
@@ -57,6 +63,7 @@ internal class BlazeWebView @SuppressLint(
     val eventName = eventJson.getString("eventName")
     val eventData = eventJson.optString("eventData")
     val eventDataJson = safeParseJson(eventData)
+
     if (eventName == "appReady") {
       isWebViewReady = true
       drainEventQueue()
@@ -123,6 +130,41 @@ internal class BlazeWebView @SuppressLint(
       this.webView.layoutParams = FrameLayout.LayoutParams(0, 0)
       val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
       rootView?.removeView(webView)
+    }
+  }
+
+  @JavascriptInterface
+  fun saveToStorage(key: String, value: String): Boolean {
+    try {
+      val editor = sharedPreferences.edit()
+      editor.putString(key, value)
+      editor.apply()
+      return true
+    } catch (e: Exception) {
+      Log.e("BlazeSDK: Failure: ", e.message.toString())
+      return false
+    }
+  }
+
+  @JavascriptInterface
+  fun getFromStorage(key: String): String? {
+    try {
+      return sharedPreferences.getString(key, null)
+    } catch (e: Exception) {
+      Log.e("BlazeSDK: Failure: ", e.message.toString())
+      return null
+    }
+  }
+
+  @JavascriptInterface
+  fun openApp(
+    intentUri: String
+  ) {
+    try {
+      val intent = Intent(Intent.ACTION_VIEW, Uri.parse(intentUri))
+      context.startActivity(intent)
+    } catch (e: Exception) {
+      Log.e("BlazeSDK: openApp: ", e.message.toString())
     }
   }
 

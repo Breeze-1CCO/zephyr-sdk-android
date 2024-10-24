@@ -74,6 +74,8 @@ class MainActivity : ComponentActivity() {
 
                 val callbackEventAction = callbackEvent.optJSONObject("payload")?.optString("action")
 
+                Toast.makeText(activityContext, callbackEvent.toString(2), Toast.LENGTH_SHORT).show()
+
                 if(callbackEventAction == "sendOTP") {
                   otpSessionToken.value = callbackEvent.optJSONObject("payload")?.optString("otpSessionToken") ?: ""
                 }
@@ -122,7 +124,7 @@ fun createSDKPayload(payload: JSONObject): JSONObject {
 fun createInitiatePayload(): JSONObject {
   val initiatePayload = JSONObject()
   initiatePayload.put("merchantId", "d2cstorebeta")
-  initiatePayload.put("environment", "sandbox")
+  initiatePayload.put("environment", "beta")
   initiatePayload.put("shopUrl", "https://d2c-store-beta.myshopify.com")
   return initiatePayload
 }
@@ -130,61 +132,65 @@ fun createInitiatePayload(): JSONObject {
 fun createStartCheckoutPayload(): JSONObject {
   val cartString = """
     {
-      "token": "c1-473243a885065ad7c911dc334255d73e",
+      "token": "Z2NwLWFzaWEtc291dGhlYXN0MTowMUo5Qjc2SDJOSlZGTVE2RU1QQTE3SzFCRQ?key=87d1860b490836e51d550b978d263f3b",
       "note": "",
-      "attributes": {
-        "bundleData": "-",
-        "discountName": "-",
-        "variant_ids": "-",
-        "target_variant_ids": "-",
-        "discount": "-"
-      },
-      "original_total_price": 100,
-      "total_price": 100,
+      "attributes": {      },
+      "original_total_price": 200,
+      "total_price": 200,
       "total_discount": 0,
-      "total_weight": 0.0,
+      "total_weight": 750,
       "item_count": 1,
       "items": [
         {
-          "id": 45938457084219,
-          "properties": {},
+          "id": 49031395803451,
+          "properties": {
+    
+          },
           "quantity": 1,
-          "variant_id": 45938457084219,
-          "key": "45938457084219:7df34184-c212-44dc-8d8e-8954b890646d",
-          "title": "Sony PS5 Digital Standalone",
-          "price": 100,
-          "original_price": 100,
-          "discounted_price": 100,
-          "line_price": 100,
-          "original_line_price": 100,
+          "variant_id": 49031395803451,
+          "key": "49031395803451:7e551f8ea968a2e49b09c57379e7561b",
+          "title": "Sony WH-1000XM5 Dummy (Ankit)",
+          "price": 200,
+          "original_price": 200,
+          "presentment_price": 2,
+          "discounted_price": 200,
+          "line_price": 200,
+          "original_line_price": 200,
           "total_discount": 0,
           "discounts": [],
-          "sku": "",
-          "grams": 0,
+          "sku": null,
+          "grams": 750,
           "vendor": "Sony",
-          "taxable": true,
-          "product_id": 8561540628795,
+          "taxable": false,
+          "product_id": 9614223049019,
           "product_has_only_default_variant": true,
           "gift_card": false,
-          "final_price": 100,
-          "final_line_price": 100,
-          "url": "/products/sony-ps5-digital-standalone?variant=45938457084219",
+          "final_price": 200,
+          "final_line_price": 200,
+          "url": "/products/sony-wh-1000xm5-dummy-ankit?variant=49031395803451",
           "featured_image": {
-            "aspect_ratio": 1.0,
-            "alt": "Sony PS5 Digital Standalone",
+            "aspect_ratio": 1,
+            "alt": "Sony WH-1000XM5 Dummy (Ankit)",
             "height": 679,
-            "url": "https://cdn.shopify.com/s/files/1/0684/1624/1979/files/51wPWj--fAL._SX679.jpg?v=1690641107",
+            "url": "https://cdn.shopify.com/s/files/1/0684/1624/1979/files/51KGPDttQhL._SX679.jpg?v=1690640424",
             "width": 679
           },
-          "image": "https://cdn.shopify.com/s/files/1/0684/1624/1979/files/51wPWj--fAL._SX679.jpg?v=1690641107",
-          "handle": "sony-ps5-digital-standalone",
+          "image": "https://cdn.shopify.com/s/files/1/0684/1624/1979/files/51KGPDttQhL._SX679.jpg?v=1690640424",
+          "handle": "sony-wh-1000xm5-dummy-ankit",
           "requires_shipping": true,
-          "product_type": "",
-          "product_title": "Sony PS5 Digital Standalone",
-          "product_description": "Maximize your play sessions with near instant load times for installed PS5 games. The custom integration of the PS5 console's systems lets creators pull data from the SSD so quickly that they can design games in ways never before possible. Immerse yourself in worlds with a new level of realism as rays of light are individually simulated, creating true-to-life shadows and reflections in supported PS5 games. Play your favorite PS5 games on your stunning 4K TV. Enjoy smooth and fluid high frame rate gameplay at up to 120fps for compatible games, with support for 120Hz output on 4K displays. With an HDR TV, supported PS5 games display an unbelievably vibrant and lifelike range of colors. PS5 consoles support 8K Output, so you can play games on your 4320p resolution display. Immerse yourself in soundscapes where it feels as if the sound comes from every direction. Through your headphones or TV speakers your surroundings truly come alive with Tempest 3D AudioTech in supported games. Experience haptic feedback via the DualSense wireless controller in select PS5 titles and feel the effects and impact of your in-game actions through dynamic sensory feedback. Get to grips with immersive adaptive triggers, featuring dynamic resistance levels which simulate the physical impact of in-game activities in select PS5 games.",
+          "product_type": "disableTrackOrder",
+          "product_title": "Sony WH-1000XM5 Dummy (Ankit)",
+          "product_description": "\n\nIndustry Leading noise cancellation-two processors control 8 microphones for unprecedented noise cancellation. With Auto NC Optimizer, noise cancelling is automatically optimized based on your wearing conditions and environment.\nIndustry-leading call quality with our Precise Voice Pickup Technology uses four beamforming microphones and an AI-based noise reduction algorithm\nMagnificent Sound, engineered to perfection with the new Integrated Processor V1\nCrystal clear hands-free calling with 4 beamforming microphones, precise voice pickup, and advanced audio signal processing.\nUp to 40-hour battery life for continuous music playtime (With Noise Cancellation ON, get up to 30 Hours of playtime, and With Noise Cancellation off get up to 40 Hours.) All-day power and quick charging (3 min charge for 3 hours of playback).\nUltra-comfortable, lightweight design with soft fit leather\nMultipoint connection allows you to quickly switch between devices\n\n\n\n\n\nCarry your headphones effortlessly in the redesigned case.\nIntuitive touch control settings to pause play skip tracks, control volume, activate your voice assistant, and answer phone calls.\nFor everyday convenience, just Speak-to-Chat and Quick Attention mode stop your music and let in ambient sound\n\n\n",
           "variant_title": null,
-          "variant_options": ["Default Title"],
-          "options_with_values": [{"name": "Title", "value": "Default Title"}],
+          "variant_options": [
+            "Default Title"
+          ],
+          "options_with_values": [
+            {
+              "name": "Title",
+              "value": "Default Title"
+            }
+          ],
           "line_level_discount_allocations": [],
           "line_level_total_discount": 0,
           "has_components": false
@@ -192,7 +198,7 @@ fun createStartCheckoutPayload(): JSONObject {
       ],
       "requires_shipping": true,
       "currency": "INR",
-      "items_subtotal_price": 100,
+      "items_subtotal_price": 200,
       "cart_level_discount_applications": []
     }
     """.trimIndent()
