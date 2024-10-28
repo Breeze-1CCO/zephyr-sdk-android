@@ -13,16 +13,18 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 
 internal class BlazeWebView @SuppressLint(
   "SetJavaScriptEnabled",
   "JavascriptInterface"
 ) constructor(
-  private val context: Activity,
+  context: Activity,
   private val initiatePayload: JSONObject,
   private val callbackFn: CallbackFn
 ) {
 
+  private val contextRef: WeakReference<Activity> = WeakReference(context)
   private val webView: WebView = WebView(context)
   private var isWebViewReady: Boolean = false
   private var consumingBackPress: Boolean = false
@@ -53,7 +55,13 @@ internal class BlazeWebView @SuppressLint(
 
   fun terminate() {
     this.sendEvent("terminate", JSONObject())
-    this.webView.destroy()
+    hideView()
+    contextRef.get()?.runOnUiThread {
+      webView.stopLoading()
+      webView.removeJavascriptInterface("Native")
+      this.webView.destroy()
+    }
+    eventQueue.clear()
   }
 
 
@@ -98,7 +106,7 @@ internal class BlazeWebView @SuppressLint(
         .put("eventData", payload)
         .put("source", "blaze")
     if (isWebViewReady) {
-      context.runOnUiThread {
+      contextRef.get()?.runOnUiThread {
         webView.evaluateJavascript("javascript:onSDKEvent(JSON.stringify($eventMessage))") {}
       }
     } else {
@@ -115,20 +123,20 @@ internal class BlazeWebView @SuppressLint(
   }
 
   private fun renderView() {
-    this.context.runOnUiThread {
+    contextRef.get()?.runOnUiThread {
       this.webView.layoutParams = FrameLayout.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.MATCH_PARENT
       )
-      val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
+      val rootView = contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
       rootView?.addView(webView)
     }
   }
 
   private fun hideView() {
-    this.context.runOnUiThread {
+    contextRef.get()?.runOnUiThread {
       this.webView.layoutParams = FrameLayout.LayoutParams(0, 0)
-      val rootView = this.context.window.decorView.findViewById<ViewGroup>(android.R.id.content)
+      val rootView = contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
       rootView?.removeView(webView)
     }
   }
@@ -162,7 +170,7 @@ internal class BlazeWebView @SuppressLint(
   ) {
     try {
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(intentUri))
-      context.startActivity(intent)
+      contextRef.get()?.startActivity(intent)
     } catch (e: Exception) {
       Log.e("BlazeSDK: openApp: ", e.message.toString())
     }
