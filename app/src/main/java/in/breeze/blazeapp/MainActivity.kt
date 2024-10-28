@@ -1,13 +1,16 @@
 package `in`.breeze.blazeapp
 
+import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler.Callback
+import android.util.Log
 import android.webkit.WebView
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,10 +19,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -29,11 +38,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import `in`.breeze.blaze.Blaze
 import `in`.breeze.blazeapp.ui.theme.BlazeAppTheme
+import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID.randomUUID
+
 
 class MainActivity : ComponentActivity() {
 
@@ -42,6 +54,16 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     WebView.setWebContentsDebuggingEnabled(true)
+
+    onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+      override fun handleOnBackPressed() {
+        if (blaze.handleBackPress()) {
+          isEnabled = false
+          onBackPressedDispatcher.onBackPressed()
+        }
+      }
+    })
+
 
     val activityContext = this
     setContent {
@@ -61,54 +83,90 @@ class MainActivity : ComponentActivity() {
           horizontalAlignment = Alignment.CenterHorizontally,
           verticalArrangement = Arrangement.Center,
         ) {
-          InitiateView {
-            blaze = Blaze()
 
-            val initiatePayload = createInitiatePayload()
-            val initSDKPayload = createSDKPayload(initiatePayload)
 
-            blaze.initiate(activityContext, initSDKPayload) { callbackEvent ->
-              run {
-                callbackEventsStr.value =
-                  callbackEventsStr.value + callbackEvent.toString(2) + "\n ------- \n"
+          Row {
+            InitiateView {
+              blaze = Blaze()
 
-                val callbackEventAction = callbackEvent.optJSONObject("payload")?.optString("action")
+              val initiatePayload = createInitiatePayload()
+              val initSDKPayload = createSDKPayload(initiatePayload)
 
-                Toast.makeText(activityContext, callbackEvent.toString(2), Toast.LENGTH_SHORT).show()
+              blaze.initiate(activityContext, initSDKPayload) { callbackEvent ->
+                run {
+                  callbackEventsStr.value =
+                    callbackEventsStr.value + callbackEvent.toString(2) + "\n ------- \n"
 
-                if(callbackEventAction == "sendOTP") {
-                  otpSessionToken.value = callbackEvent.optJSONObject("payload")?.optString("otpSessionToken") ?: ""
+                  Log.d("Blaze:", callbackEvent.toString())
+
+                  val callbackEventAction =
+                    callbackEvent.optJSONObject("payload")?.optString("action")
+
+                  Toast.makeText(activityContext, callbackEvent.toString(2), Toast.LENGTH_SHORT)
+                    .show()
+
+                  if (callbackEventAction == "sendOTP") {
+                    otpSessionToken.value =
+                      callbackEvent.optJSONObject("payload")?.optString("otpSessionToken") ?: ""
+                  }
+
                 }
-
               }
             }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            TerminateView {
+              blaze.terminate()
+            }
           }
+
           Spacer(modifier = Modifier.height(16.dp))
-          ProcessView {
-            Toast.makeText(activityContext, "Process Triggered", Toast.LENGTH_SHORT).show()
-            blaze.process(createSDKPayload(createStartCheckoutPayload()))
-          }
 
-          LoginProcessParams(
-            processor = { payload ->
-              blaze.process(payload)
-            },
-            otpSessionToken = otpSessionToken
-          )
-
-          Column(
-            modifier = Modifier
-              .fillMaxSize()
-              .verticalScroll(rememberScrollState())
-          ) {
-            Text(
-              text = callbackEventsStr.value, modifier = Modifier.padding(16.dp)
-            )
-          }
+          AppLayout({ payload ->
+            blaze.process(payload)
+          }, otpSessionToken, callbackEventsStr)
 
         }
       }
     }
+  }
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun AppLayout(
+  processor: (payload: JSONObject) -> Unit,
+  otpSessionToken: MutableState<String>,
+  eventString: MutableState<String>
+) {
+  var selectedTabIndex by remember { mutableStateOf(0) }
+  val tabs = listOf("Checkout", "Login", "Update Customer", "Events")
+
+  Scaffold(topBar = {
+    TabRow(selectedTabIndex = selectedTabIndex, indicator = { tabPositions ->
+      Box(
+        Modifier
+          .tabIndicatorOffset(tabPositions[selectedTabIndex])
+          .height(4.dp)
+      )
+    }) {
+      tabs.forEachIndexed { index, title ->
+        Tab(selected = selectedTabIndex == index,
+          onClick = { selectedTabIndex = index },
+          text = { Text(title) })
+      }
+    }
+  }) { innerPadding ->
+    Column(modifier = Modifier.padding(innerPadding)) {
+      when (selectedTabIndex) {
+        0 -> StartCheckoutView(processor)
+        1 -> LoginProcessParams(processor, otpSessionToken)
+        2 -> UpdateCustomerView(processor)
+        3 -> Logs(eventString)
+      }
+    }
+
   }
 }
 
@@ -119,6 +177,43 @@ fun createSDKPayload(payload: JSONObject): JSONObject {
   sdkPayload.put("service", "in.breeze.onecco")
   sdkPayload.put("payload", payload)
   return sdkPayload
+}
+
+fun createCustomerUpdatePayload(
+  customerName: String,
+  email: String,
+  fullAddress: String,
+  name: String,
+  phoneNumber: String,
+  postalCode: String,
+  state: String,
+  city: String,
+  country: String,
+  countryPhoneCode: String
+): JSONObject {
+  val payload = JSONObject()
+  payload.put("action", "updateCustomer")
+  payload.put("name", customerName)
+  payload.put("emailAddress", email)
+
+  val address = JSONObject()
+  address.put("fullAddress", fullAddress)
+  address.put("name", name)
+  address.put("phoneNumber", phoneNumber)
+  address.put("postalCode", postalCode)
+  address.put("state", state)
+  address.put("city", city)
+  address.put("country", country)
+  address.put("countryPhoneCode", countryPhoneCode)
+
+
+  if (fullAddress.isNotEmpty() && name.isNotEmpty()) {
+    val addresses = JSONArray()
+    addresses.put(address)
+    payload.put("addresses", addresses)
+  }
+
+  return payload
 }
 
 fun createInitiatePayload(): JSONObject {
@@ -232,7 +327,6 @@ fun InitiateView(onClick: () -> Unit) {
       Text(text = "Initiate")
     }
   }
-
 }
 
 @Composable
@@ -244,9 +338,27 @@ fun ProcessView(onClick: () -> Unit) {
   }
 }
 
+@Composable
+fun TerminateView(onClick: () -> Unit) {
+  Row {
+    Button(onClick = onClick) {
+      Text(text = "Terminate")
+    }
+  }
+}
+
 
 @Composable
-fun LoginProcessParams(processor: (payload: JSONObject) -> Unit, otpSessionToken: MutableState<String>) {
+fun StartCheckoutView(processor: (payload: JSONObject) -> Unit) {
+  ProcessView {
+    processor(createSDKPayload(createStartCheckoutPayload()))
+  }
+}
+
+@Composable
+fun LoginProcessParams(
+  processor: (payload: JSONObject) -> Unit, otpSessionToken: MutableState<String>
+) {
   var phoneNumber by remember {
     mutableStateOf("")
   }
@@ -276,5 +388,105 @@ fun LoginProcessParams(processor: (payload: JSONObject) -> Unit, otpSessionToken
         Text(text = "VerifyOTP")
       }
     }
+  }
+}
+
+
+@Composable
+fun UpdateCustomerView(processor: (payload: JSONObject) -> Unit) {
+  var customerName by remember {
+    mutableStateOf("Test Name")
+  }
+
+  var email by remember {
+    mutableStateOf("test@test.com")
+  }
+
+
+  var name by remember { mutableStateOf("Test") }
+  var phoneNumber by remember { mutableStateOf("9876543210") }
+  var postalCode by remember { mutableStateOf("560030") }
+  var state by remember { mutableStateOf("Karnataka") }
+  var city by remember { mutableStateOf("Bengaluru") }
+  var fullAddress by remember { mutableStateOf("Test FirstLine") }
+  var country by remember { mutableStateOf("India") }
+  var countryPhoneCode by remember { mutableStateOf("+91") }
+
+
+
+  Column(
+    modifier = Modifier
+      .padding(vertical = 16.dp)
+      .verticalScroll(rememberScrollState()),
+    verticalArrangement = Arrangement.spacedBy(16.dp)
+  ) {
+
+    Text("Customer Profile")
+    OutlinedTextField(value = customerName,
+      onValueChange = { customerName = it },
+      label = { Text("Name") })
+    OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
+
+    Spacer(modifier = Modifier.height(16.dp))
+    Text("Customer Address (optional)")
+
+    OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
+    OutlinedTextField(value = phoneNumber,
+      onValueChange = { phoneNumber = it },
+      label = { Text("Phone Number") })
+    OutlinedTextField(value = postalCode,
+      onValueChange = { postalCode = it },
+      label = { Text("Postal Code") })
+    OutlinedTextField(value = state, onValueChange = { state = it }, label = { Text("State") })
+    OutlinedTextField(value = city, onValueChange = { city = it }, label = { Text("City") })
+    OutlinedTextField(value = fullAddress,
+      onValueChange = { fullAddress = it },
+      label = { Text("Full Address") })
+    OutlinedTextField(value = country,
+      onValueChange = { country = it },
+      label = { Text("Country") })
+    OutlinedTextField(value = countryPhoneCode,
+      onValueChange = { countryPhoneCode = it },
+      label = { Text("Country Phone Code") })
+
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      Button(onClick = {
+        processor(
+          createSDKPayload(
+            createCustomerUpdatePayload(
+              customerName,
+              email,
+              fullAddress,
+              name,
+              phoneNumber,
+              postalCode,
+              state,
+              city,
+              country,
+              countryPhoneCode
+            )
+          )
+        )
+
+      }, enabled = customerName.isNotEmpty() && email.isNotEmpty()) {
+        Text(text = "UpdateCustomer")
+      }
+    }
+  }
+}
+
+@Composable
+fun Logs(eventString: MutableState<String>) {
+
+  Column(
+    modifier = Modifier
+      .fillMaxSize()
+      .verticalScroll(rememberScrollState())
+  ) {
+    Text(
+      text = eventString.value, modifier = Modifier.padding(16.dp)
+    )
   }
 }
