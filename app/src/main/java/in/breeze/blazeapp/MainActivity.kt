@@ -220,7 +220,7 @@ fun createInitiatePayload(): JSONObject {
   val initiatePayload = JSONObject()
   initiatePayload.put("merchantId", "d2cstorebeta")
   initiatePayload.put("environment", "beta")
-  initiatePayload.put("shopUrl", "https://d2c-store-beta.myshopify.com")
+  initiatePayload.put("shopUrl", "https://d2cstore-custom.vercel.app")
   return initiatePayload
 }
 
@@ -303,6 +303,15 @@ fun createStartCheckoutPayload(): JSONObject {
   return processPayload
 }
 
+fun createCustomStartCheckoutPayload(): JSONObject {
+  val processPayload = JSONObject()
+  processPayload.put("action", "startCheckout")
+  processPayload.put("cart", "{\"id\":\"7feaa429-308d-49b7-8461-46bfa4b37ff7\",\"items\":[{\"id\":\"3aecf419-6823-4581-a093-0c90c5b5e1fc\",\"title\":\"Apple iPhone 7 Plus\",\"variantTitle\":\"256 GB / GOLD\",\"image\":\"https://dfelk5npz6ka0.cloudfront.net/products/40767940985052.jpg\",\"quantity\":1,\"initialPrice\":100,\"finalPrice\":100,\"discount\":0}],\"initialPrice\":100,\"totalPrice\":100,\"totalDiscount\":0,\"itemCount\":1,\"currency\":\"INR\"}")
+  processPayload.put("signature", "T4BRKwHKWfkWRLgF5ecss2+2tyID4zKVUqkfEgdFS73lyAokBq92VJRz4g+xzCcUE84ZNl7oQ9t26i8zGQLgh/B/6vNliM9u7VMX0soYDC9pEWd4TsWeetlYMzl/UIzitYan5q9aQ2UfS7HENHQGvGfOjsa75gP3SVwpufK8Sb1VFRFsnJKsXzgWq+y9iWLieJe596poEzUP2Wkt17mSGwH9rWukTy5S1ddZoZXUxDQiMtfXFj9NOnPDUA8psmERifivaD8IvhMEYwlEk+u6MrxF7IhasBs8dYGEZW+YDeaRz6mzK37sarYWgCUJgEYTJ97rmcRedgvnj+28YES/pw==")
+  processPayload.put("keyId", "90701")
+  return processPayload
+}
+
 fun createSendOtpPayload(phoneNumber: String): JSONObject {
   val payload = JSONObject()
   payload.put("action", "sendOTP")
@@ -316,6 +325,12 @@ fun createVerifyOtpPayload(otp: String, otpSessionToken: String): JSONObject {
   payload.put("action", "verifyOTP")
   payload.put("otp", otp)
   payload.put("otpSessionToken", otpSessionToken)
+  return payload
+}
+
+fun createLogoutPayload(): JSONObject {
+  val payload = JSONObject()
+  payload.put("action", "logout")
   return payload
 }
 
@@ -353,6 +368,9 @@ fun StartCheckoutView(processor: (payload: JSONObject) -> Unit) {
   ProcessView {
     processor(createSDKPayload(createStartCheckoutPayload()))
   }
+  ProcessView {
+    processor(createSDKPayload(createCustomStartCheckoutPayload()))
+  }
 }
 
 @Composable
@@ -386,6 +404,12 @@ fun LoginProcessParams(
         processor(createSDKPayload(createVerifyOtpPayload(otp, otpSessionToken.value)))
       }, enabled = otp.isNotEmpty()) {
         Text(text = "VerifyOTP")
+      }
+
+      Button(onClick = {
+        processor(createSDKPayload(createLogoutPayload()))
+      }) {
+        Text(text = "Logout")
       }
     }
   }
