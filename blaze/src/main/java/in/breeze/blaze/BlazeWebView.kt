@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
@@ -12,8 +13,10 @@ import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.ref.WeakReference
+import java.util.Collections
 
 internal class BlazeWebView @SuppressLint(
   "SetJavaScriptEnabled",
@@ -174,6 +177,31 @@ internal class BlazeWebView @SuppressLint(
     } catch (e: Exception) {
       Log.e("BlazeSDK: openApp: ", e.message.toString())
     }
+  }
+
+  @JavascriptInterface
+  fun findApps(payload: String): String {
+    val pm = contextRef.get()?.packageManager
+    val apps = JSONArray()
+
+    if (pm !== null ) {
+      val upiApps = Intent()
+      upiApps.setData(Uri.parse(payload))
+      val launchables: List<ResolveInfo> = pm.queryIntentActivities(upiApps, 0)
+      Collections.sort(launchables, ResolveInfo.DisplayNameComparator(pm))
+      for (resolveInfo in launchables) {
+        val jsonObject = JSONObject()
+        try {
+          val appInfo = pm.getApplicationInfo(resolveInfo.activityInfo.packageName, 0)
+          jsonObject.put("packageName", appInfo.packageName)
+          jsonObject.put("appName", pm.getApplicationLabel(appInfo))
+          apps.put(jsonObject)
+        } catch (e: Exception) {
+          Log.e("BlazeSDK: openApp: ", e.message.toString())
+        }
+      }
+    }
+    return apps.toString()
   }
 
 }
