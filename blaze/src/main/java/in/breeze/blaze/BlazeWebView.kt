@@ -10,6 +10,7 @@ import android.net.Uri
 import android.util.Log
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -17,6 +18,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.lang.ref.WeakReference
 import java.util.Collections
+
 
 internal class BlazeWebView @SuppressLint(
   "SetJavaScriptEnabled",
@@ -33,12 +35,15 @@ internal class BlazeWebView @SuppressLint(
   private var consumingBackPress: Boolean = false
   private var eventQueue: HashMap<String, JSONObject> = hashMapOf()
   private val sharedPreferences: SharedPreferences
+  private val baseUrl: String = getBaseUrl(initiatePayload)
 
   init {
     this.webView.settings.javaScriptEnabled = true
+    this.webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+    this.webView.settings.domStorageEnabled = true
     this.webView.webViewClient = WebViewClient()
     this.webView.addJavascriptInterface(this, "Native")
-    this.webView.loadUrl(getBaseUrl(initiatePayload))
+    this.webView.loadUrl(baseUrl)
     this.sendEvent("initiate", this.initiatePayload)
     this.sharedPreferences = context.getSharedPreferences("BlazeSharedPref", Context.MODE_PRIVATE)
   }
@@ -49,8 +54,13 @@ internal class BlazeWebView @SuppressLint(
   }
 
   fun handleBackPress(): Boolean {
-    if (consumingBackPress) {
+    val currentPageUrl = webView.url
+    val isBreezePage = currentPageUrl?.contains(baseUrl) ?: false
+    if (consumingBackPress && isBreezePage) {
       this.sendEvent("backPress", JSONObject())
+      return false
+    } else if (webView.canGoBack()) {
+      webView.goBack()
       return false
     }
     return true
@@ -99,6 +109,10 @@ internal class BlazeWebView @SuppressLint(
       hideView()
     }
 
+    if(eventName == "invokeMethod") {
+      handleInvokeMethod(eventDataJson)
+    }
+
   }
 
 
@@ -131,7 +145,8 @@ internal class BlazeWebView @SuppressLint(
         ViewGroup.LayoutParams.MATCH_PARENT,
         ViewGroup.LayoutParams.MATCH_PARENT
       )
-      val rootView = contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
+      val rootView =
+        contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
       rootView?.addView(webView)
     }
   }
@@ -139,13 +154,41 @@ internal class BlazeWebView @SuppressLint(
   private fun hideView() {
     contextRef.get()?.runOnUiThread {
       this.webView.layoutParams = FrameLayout.LayoutParams(0, 0)
-      val rootView = contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
+      val rootView =
+        contextRef.get()?.window?.decorView?.findViewById<ViewGroup>(android.R.id.content)
       rootView?.removeView(webView)
     }
   }
 
-  @JavascriptInterface
-  fun saveToStorage(key: String, value: String): Boolean {
+  private fun handleInvokeMethod(eventData: JSONObject) {
+    val methodName = eventData.optString("methodName")
+    val requestId = eventData.optString("requestId")
+    val params = eventData.optString("params")
+    val paramsJson = safeParseJson(params)
+
+    val invokeResult = JSONObject().put("requestId", requestId).put("methodName", methodName)
+
+    if (methodName == "saveToStorage") {
+      val key = paramsJson.optString("key")
+      val value = paramsJson.optString("value")
+      invokeResult.put("methodResult", saveToStorage(key, value))
+    } else if (methodName == "openApp") {
+      val intentUri = paramsJson.optString("intentUri")
+      invokeResult.put("methodResult", openApp(intentUri))
+    } else if (methodName == "getFromStorage") {
+      val key = paramsJson.optString("key")
+      val value = getFromStorage(key)
+      invokeResult.put("methodResult", JSONObject().put("key", key).put("value", value))
+    } else if (methodName == "findApps") {
+      val payload = paramsJson.optString("payload")
+      invokeResult.put("methodResult", findApps(payload))
+    } else {
+      invokeResult.put("methodResult", "Method not found")
+    }
+    sendEvent("invokeMethodResult", invokeResult)
+  }
+
+  private fun saveToStorage(key: String, value: String): Boolean {
     try {
       val editor = sharedPreferences.edit()
       editor.putString(key, value)
@@ -157,8 +200,7 @@ internal class BlazeWebView @SuppressLint(
     }
   }
 
-  @JavascriptInterface
-  fun getFromStorage(key: String): String? {
+  private fun getFromStorage(key: String): String? {
     try {
       return sharedPreferences.getString(key, null)
     } catch (e: Exception) {
@@ -167,24 +209,23 @@ internal class BlazeWebView @SuppressLint(
     }
   }
 
-  @JavascriptInterface
-  fun openApp(
+  private fun openApp(
     intentUri: String
-  ) {
+  ): String {
     try {
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(intentUri))
       contextRef.get()?.startActivity(intent)
+      return "Successfully triggered intent"
     } catch (e: Exception) {
-      Log.e("BlazeSDK: openApp: ", e.message.toString())
+      return "Failed to invoke intent: " + e.message.toString()
     }
   }
 
-  @JavascriptInterface
-  fun findApps(payload: String): String {
+  private fun findApps(payload: String): String {
     val pm = contextRef.get()?.packageManager
     val apps = JSONArray()
 
-    if (pm !== null ) {
+    if (pm !== null) {
       val upiApps = Intent()
       upiApps.setData(Uri.parse(payload))
       val launchables: List<ResolveInfo> = pm.queryIntentActivities(upiApps, 0)
@@ -197,7 +238,7 @@ internal class BlazeWebView @SuppressLint(
           jsonObject.put("appName", pm.getApplicationLabel(appInfo))
           apps.put(jsonObject)
         } catch (e: Exception) {
-          Log.e("BlazeSDK: openApp: ", e.message.toString())
+          Log.e("BlazeSDK: findApps: ", e.message.toString())
         }
       }
     }
