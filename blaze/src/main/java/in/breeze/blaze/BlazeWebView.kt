@@ -56,14 +56,19 @@ internal class BlazeWebView @SuppressLint(
   fun handleBackPress(): Boolean {
     val currentPageUrl = webView.url
     val isBreezePage = currentPageUrl?.contains(baseUrl) ?: false
-    if (consumingBackPress && isBreezePage) {
+    if(!consumingBackPress && isBreezePage) {
+      return true
+    } else if (consumingBackPress && isBreezePage) {
       this.sendEvent("backPress", JSONObject())
       return false
-    } else if (webView.canGoBack()) {
-      webView.goBack()
+    } else {
+      contextRef.get()?.runOnUiThread {
+        if(webView.canGoBack()) {
+          webView.goBack()
+        }
+      }
       return false
     }
-    return true
   }
 
   fun terminate() {
