@@ -54,13 +54,16 @@ internal class BlazeWebView @SuppressLint(
   }
 
   fun handleBackPress(): Boolean {
-    val currentPageUrl = webView.url
-    val isBreezePage = currentPageUrl?.contains(baseUrl) ?: false
-    if (consumingBackPress && isBreezePage) {
-      this.sendEvent("backPress", JSONObject())
-      return false
-    } else if (webView.canGoBack()) {
-      webView.goBack()
+    if (consumingBackPress) {
+      contextRef.get()?.runOnUiThread {
+        val currentPageUrl = webView.url
+        val isBreezePage = currentPageUrl?.contains(baseUrl) ?: false
+        if (isBreezePage) {
+          this.sendEvent("backPress", JSONObject())
+        } else if (webView.canGoBack()) {
+          webView.goBack()
+        }
+      }
       return false
     }
     return true
@@ -109,7 +112,7 @@ internal class BlazeWebView @SuppressLint(
       hideView()
     }
 
-    if(eventName == "invokeMethod") {
+    if (eventName == "invokeMethod") {
       handleInvokeMethod(eventDataJson)
     }
 
