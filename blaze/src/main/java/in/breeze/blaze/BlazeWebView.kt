@@ -217,7 +217,7 @@ internal class BlazeWebView @SuppressLint(
   ): String {
     try {
       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(intentUri))
-      contextRef.get()?.startActivity(intent)
+      contextRef.get()?.startActivityForResult(intent, 0)
       return "Successfully triggered intent"
     } catch (e: Exception) {
       return "Failed to invoke intent: " + e.message.toString()
